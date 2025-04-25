@@ -39,6 +39,7 @@ export class SDK {
         }),
         this.ownedObject(tx, admin),
       ],
+      typeArguments: [this.otw],
     });
 
     return {
