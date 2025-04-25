@@ -4,7 +4,6 @@ import { isValidSuiAddress } from '@mysten/sui/utils';
 import { devInspectAndGetReturnValues } from '@polymedia/suitcase-core';
 import invariant from 'tiny-invariant';
 
-import { SDK } from './sdk';
 import {
   DestroyAdminArgs,
   DestroySuperAdminArgs,
@@ -15,23 +14,28 @@ import {
   RevokeAdminArgs,
   SdkConstructorArgs,
   StartSuperAdminTransferArgs,
-} from './types/memez.types';
+} from './acl.types';
+import { SDK } from './sdk';
 
 export class AclSDK extends SDK {
-  constructor(args: SdkConstructorArgs | undefined | null = null) {
+  constructor(args: SdkConstructorArgs) {
     super(args);
   }
 
   public newAdmin({ tx = new Transaction(), superAdmin }: NewAdminArgs) {
     const admin = tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'new_admin',
       arguments: [
-        tx.sharedObjectRef(this.sharedObjects.ACL({ mutable: true })),
+        tx.sharedObjectRef({
+          objectId: this.aclObjectId,
+          initialSharedVersion: this.aclInitialSharedVersion,
+          mutable: true,
+        }),
         this.ownedObject(tx, superAdmin),
       ],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     return {
@@ -51,14 +55,18 @@ export class AclSDK extends SDK {
     );
 
     const admin = tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'new_admin',
       arguments: [
-        tx.sharedObjectRef(this.sharedObjects.ACL({ mutable: true })),
+        tx.sharedObjectRef({
+          objectId: this.aclObjectId,
+          initialSharedVersion: this.aclInitialSharedVersion,
+          mutable: true,
+        }),
         this.ownedObject(tx, superAdmin),
       ],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     tx.transferObjects([admin], recipient);
@@ -72,15 +80,19 @@ export class AclSDK extends SDK {
     admin,
   }: RevokeAdminArgs) {
     tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'revoke',
       arguments: [
-        tx.sharedObjectRef(this.sharedObjects.ACL({ mutable: true })),
+        tx.sharedObjectRef({
+          objectId: this.aclObjectId,
+          initialSharedVersion: this.aclInitialSharedVersion,
+          mutable: true,
+        }),
         this.ownedObject(tx, superAdmin),
         tx.pure.address(admin),
       ],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     return tx;
@@ -88,14 +100,18 @@ export class AclSDK extends SDK {
 
   public destroyAdmin({ tx = new Transaction(), admin }: DestroyAdminArgs) {
     tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'destroy_admin',
       arguments: [
-        tx.sharedObjectRef(this.sharedObjects.ACL({ mutable: true })),
+        tx.sharedObjectRef({
+          objectId: this.aclObjectId,
+          initialSharedVersion: this.aclInitialSharedVersion,
+          mutable: true,
+        }),
         this.ownedObject(tx, admin),
       ],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     return tx;
@@ -106,14 +122,18 @@ export class AclSDK extends SDK {
     superAdmin,
   }: DestroySuperAdminArgs) {
     tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'destroy_super_admin',
       arguments: [
-        tx.sharedObjectRef(this.sharedObjects.ACL({ mutable: true })),
+        tx.sharedObjectRef({
+          objectId: this.aclObjectId,
+          initialSharedVersion: this.aclInitialSharedVersion,
+          mutable: true,
+        }),
         this.ownedObject(tx, superAdmin),
       ],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     return tx;
@@ -125,11 +145,11 @@ export class AclSDK extends SDK {
     recipient,
   }: StartSuperAdminTransferArgs) {
     tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'start_transfer',
       arguments: [this.ownedObject(tx, superAdmin), tx.pure.address(recipient)],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     return tx;
@@ -140,11 +160,11 @@ export class AclSDK extends SDK {
     superAdmin,
   }: FinishSuperAdminTransferArgs) {
     tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'finish_transfer',
       arguments: [this.ownedObject(tx, superAdmin)],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     return tx;
@@ -154,14 +174,18 @@ export class AclSDK extends SDK {
     const tx = new Transaction();
 
     tx.moveCall({
-      package: this.packages.INTEREST_ACL.latest,
-      module: this.modules.ACL,
+      package: this.package,
+      module: 'access_control',
       function: 'is_admin',
       arguments: [
-        tx.sharedObjectRef(this.sharedObjects.ACL({ mutable: false })),
+        tx.sharedObjectRef({
+          objectId: this.aclObjectId,
+          initialSharedVersion: this.aclInitialSharedVersion,
+          mutable: false,
+        }),
         tx.pure.address(admin),
       ],
-      typeArguments: [this.memezOTW],
+      typeArguments: [this.otw],
     });
 
     const result = await devInspectAndGetReturnValues(this.client, tx, [
